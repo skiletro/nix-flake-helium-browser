@@ -130,6 +130,12 @@ let
     libkrb5
     snappy
     udev
+    gstreamer
+    gst-plugins-base
+    gst-plugins-good
+    gst-plugins-bad
+    gst-plugins-ugly
+    gst-libav
   ];
 
   libPath = makeLibraryPath deps
@@ -207,17 +213,16 @@ stdenv.mkDerivation {
       fi
     done
 
-    # Fix the upstream wrapper script
+    # Fix the upstream wrapper script to use the correct binary path
     substituteInPlace $out/opt/helium/helium-wrapper \
       --replace-fail '$HERE/helium' "$out/opt/helium/helium"
 
-    # Create wrapper that uses the fixed upstream wrapper
-    makeWrapper $out/opt/helium/helium-wrapper $out/bin/helium \
-      --set-default CHROME_VERSION_EXTRA nix
+    # Create symlink for wrapGAppsHook to wrap (like Brave does)
+    ln -sf $out/opt/helium/helium-wrapper $out/bin/helium
 
     # Fix .desktop file
     substituteInPlace $out/share/applications/helium.desktop \
-      --replace-fail Exec=helium Exec=$out/bin/helium
+      --replace-fail 'Exec=helium' "Exec=$out/bin/helium"
 
     # Icon is already in the correct location from the copy above
     mkdir -p $out/share/icons/hicolor/256x256/apps
@@ -230,6 +235,7 @@ stdenv.mkDerivation {
       --prefix LD_LIBRARY_PATH : "${libPath}"
       --prefix PATH : ${lib.makeBinPath [ xdg-utils coreutils ]}
       --add-flags "\''${NIXOS_OZONE_WL:+\''${WAYLAND_DISPLAY:+--ozone-platform-hint=auto}}"
+      --set-default CHROME_VERSION_EXTRA nix
     )
   '';
 
