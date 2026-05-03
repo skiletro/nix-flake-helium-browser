@@ -28,6 +28,7 @@
 , libxshmfence
 , libXi
 , libXcursor
+, libXft
 , libXScrnSaver
 , libXtst
 , libSM
@@ -55,6 +56,11 @@
 , expat
 , zlib
 , libxml2
+, libkrb5
+, snappy
+, udev
+, libXt
+, binutils
 }:
 
 let
@@ -71,7 +77,9 @@ let
     sha256 = "sha256-Dc9gtij5o7dGAnkE/asgIMo0d7HBp5fGTt+iLS2Ys0M=";
   };
 
-  libPath = lib.makeLibraryPath [
+  inherit (lib) optional optionals makeLibraryPath makeSearchPathOutput makeBinPath;
+
+  deps = [
     stdenv.cc.cc
     nss
     nspr
@@ -90,6 +98,7 @@ let
     libxshmfence
     libXi
     libXcursor
+    libXft
     libXScrnSaver
     libXtst
     libSM
@@ -117,7 +126,18 @@ let
     libxml2
     gtk3
     glib
-  ] + ":$out/opt/helium";
+    libXt
+    libkrb5
+    snappy
+    udev
+  ];
+
+  libPath = makeLibraryPath deps
+    + lib.optionalString (stdenv.hostPlatform.is64bit)
+      (":" + makeSearchPathOutput "lib" "lib64" deps)
+    + ":$out/opt/helium";
+
+  binpath = makeBinPath deps;
 in
 
 stdenv.mkDerivation {
@@ -126,6 +146,7 @@ stdenv.mkDerivation {
   dontConfigure = true;
   dontBuild = true;
   dontPatchELF = true;
+  dontStrip = true;
 
   nativeBuildInputs = [
     patchelf
@@ -133,6 +154,7 @@ stdenv.mkDerivation {
     wrapGAppsHook3
     qt6.wrapQtAppsHook
     dpkg
+    binutils
   ];
 
   dontWrapQtApps = true;
@@ -145,9 +167,19 @@ stdenv.mkDerivation {
     adwaita-icon-theme
     qt6.qtbase
     qt6.qtwayland
+    libXt
+    libkrb5
+    snappy
+    udev
+    systemd
   ];
 
-  unpackPhase = "dpkg-deb --fsys-tarfile $src | tar -x --no-same-permissions --no-same-owner";
+  unpackPhase = ''
+    runHook preUnpack
+    ar vx $src
+    tar -xvf data.tar.xz
+    runHook postUnpack
+  '';
 
   installPhase = ''
     runHook preInstall
@@ -175,17 +207,19 @@ stdenv.mkDerivation {
       fi
     done
 
-    # Create wrapper using makeWrapper to set up environment like helium-wrapper does
-    makeWrapper $out/opt/helium/helium $out/bin/helium \
-      --set-default CHROME_VERSION_EXTRA nix \
-      --prefix LD_LIBRARY_PATH : "$out/opt/helium:$out/opt/helium/lib"
+    # Fix the upstream wrapper script
+    substituteInPlace $out/opt/helium/helium-wrapper \
+      --replace-fail '$HERE/helium' "$out/opt/helium/helium"
+
+    # Create wrapper that uses the fixed upstream wrapper
+    makeWrapper $out/opt/helium/helium-wrapper $out/bin/helium \
+      --set-default CHROME_VERSION_EXTRA nix
 
     # Fix .desktop file
     substituteInPlace $out/share/applications/helium.desktop \
       --replace-fail Exec=helium Exec=$out/bin/helium
 
     # Icon is already in the correct location from the copy above
-    # Just ensure the directory structure exists
     mkdir -p $out/share/icons/hicolor/256x256/apps
 
     runHook postInstall
