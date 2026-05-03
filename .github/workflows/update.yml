@@ -1,0 +1,82 @@
+name: Update Helium Browser
+
+on:
+  schedule:
+    - cron: '0 8 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v27
+        with:
+          nix_path: nixpkgs=channel:nixos-unstable
+
+      - name: Check for Helium updates
+        id: check_update
+        run: |
+          CURRENT=$(grep -oP 'version = "\K[^"]+' helium.nix)
+          LATEST=$(curl -s https://api.github.com/repos/imputnet/helium-linux/releases/latest | jq -r .tag_name)
+          LATEST=$(echo "$LATEST" | sed 's/^v//')
+
+          echo "current=$CURRENT" >> "$GITHUB_OUTPUT"
+          echo "latest=$LATEST" >> "$GITHUB_OUTPUT"
+
+          if [ "$CURRENT" != "$LATEST" ] && [ -n "$LATEST" ]; then
+            echo "update_needed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "update_needed=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Update version in helium.nix
+        if: steps.check_update.outputs.update_needed == 'true'
+        run: |
+          sed -i "s/version = \"[^\"]*\"/version = \"${{ steps.check_update.outputs.latest }}\"/" helium.nix
+
+      - name: Calculate new hash
+        if: steps.check_update.outputs.update_needed == 'true'
+        id: hash
+        run: |
+          VERSION="${{ steps.check_update.outputs.latest }}"
+          URL="https://github.com/imputnet/helium-linux/releases/download/${VERSION}/helium-bin_${VERSION}-1_amd64.deb"
+          HASH=$(nix store prefetch-file --json "$URL" | jq -r .hash)
+          echo "hash=$HASH" >> "$GITHUB_OUTPUT"
+
+      - name: Update hash in helium.nix
+        if: steps.check_update.outputs.update_needed == 'true'
+        run: |
+          sed -i "s|sha256 = \"[^\"]*\"|sha256 = \"${{ steps.hash.outputs.hash }}\"|" helium.nix
+
+      - name: Test build
+        if: steps.check_update.outputs.update_needed == 'true'
+        run: |
+          nix build .#helium
+
+      - name: Create pull request
+        if: steps.check_update.outputs.update_needed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          BRANCH="update/helium-${{ steps.check_update.outputs.latest }}"
+          git checkout -b "$BRANCH"
+          git add helium.nix
+          git commit -m "chore: update Helium to ${{ steps.check_update.outputs.latest }}"
+          git push origin "$BRANCH"
+
+          gh pr create \
+            --title "chore: update Helium to ${{ steps.check_update.outputs.latest }}" \
+            --body "Automated update of Helium Browser from ${{ steps.check_update.outputs.current }} to ${{ steps.check_update.outputs.latest }}." \
+            --base main
