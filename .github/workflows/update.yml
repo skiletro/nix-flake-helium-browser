@@ -16,6 +16,10 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.PULL_REQUET_KEY }}
+          ref: main
+          fetch-depth: 0
 
       - name: Install Nix
         uses: cachix/install-nix-action@v27
@@ -64,9 +68,13 @@ jobs:
 
       - name: Commit and push changes
         if: steps.check_update.outputs.update_needed == 'true'
+        env:
+          TOKEN: ${{ secrets.PULL_REQUET_KEY }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+          git fetch origin main
+          git checkout -B main origin/main
           git add helium.nix
           git commit -m "chore: update Helium to ${{ steps.check_update.outputs.latest }}" || echo "No changes to commit"
-          git push https://${{ secrets.PULL_REQUET_KEY }}@github.com/${{ github.repository }}.git main
+          git push https://$TOKEN@github.com/${{ github.repository }}.git main
