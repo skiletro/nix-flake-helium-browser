@@ -216,10 +216,16 @@ stdenv.mkDerivation {
 
     # Fix .desktop file
     substituteInPlace $out/share/applications/helium.desktop \
-      --replace-fail 'Exec=helium' "Exec=$out/bin/helium"
+      --replace-fail 'Exec=helium' "Exec=$out/bin/helium" \
+      --replace-fail 'Icon=helium' "Icon=$out/share/icons/hicolor/256x256/apps/helium.png"
 
-    # Icon is already in the correct location from the copy above
+    # Copy icon to hicolor theme directory
     mkdir -p $out/share/icons/hicolor/256x256/apps
+    if [ -f $out/opt/helium/product_logo_256.png ]; then
+      cp $out/opt/helium/product_logo_256.png $out/share/icons/hicolor/256x256/apps/helium.png
+    elif [ -f $out/opt/helium/product_logo.png ]; then
+      cp $out/opt/helium/product_logo.png $out/share/icons/hicolor/256x256/apps/helium.png
+    fi
 
     runHook postInstall
   '';
