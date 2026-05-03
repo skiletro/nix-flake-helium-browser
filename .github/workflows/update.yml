@@ -73,8 +73,8 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git fetch origin master
-          git checkout -B master origin/master
+          git fetch origin main
+          git checkout -B main origin/main
           git add helium.nix
           git commit -m "chore: update Helium to ${{ steps.check_update.outputs.latest }}" || echo "No changes to commit"
-          git push https://$TOKEN@github.com/${{ github.repository }}.git master
+          git push https://$TOKEN@github.com/${{ github.repository }}.git main
