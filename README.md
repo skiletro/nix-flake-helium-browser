@@ -10,7 +10,7 @@
         <a href="https://helium.computer/">🌐 helium.computer</a> ·
         <a href="https://github.com/imputnet/helium">📦 Helium Source</a> ·
         <a href="https://github.com/imputnet/helium-linux/releases">⬇️ Releases</a> ·
-        <a href="https://github.com/user/nix-flake-helium-browser">📦 This Flake</a>
+        <a href="https://github.com/oxcl/nix-flake-helium-browser">📦 This Flake</a>
     </p>
 </center>
 
@@ -70,7 +70,7 @@ This approach is similar to how [Vivaldi](https://github.com/NixOS/nixpkgs/blob/
 
 ```bash
 # Clone the repository
-git clone https://github.com/YOUR_USERNAME/nix-flake-helium-browser.git
+git clone https://github.com/oxcl/nix-flake-helium-browser.git
 cd nix-flake-helium-browser
 
 # Build Helium
@@ -115,7 +115,7 @@ The overlay exposes `pkgs.helium` in your Nixpkgs instance:
 {
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
-        helium-flake.url = "github:user/nix-flake-helium-browser";
+        helium-flake.url = "github:oxcl/nix-flake-helium-browser";
     helium-flake.inputs.nixpkgs.follows = "nixpkgs";
   };
 
@@ -140,7 +140,7 @@ The overlay exposes `pkgs.helium` in your Nixpkgs instance:
 
 {
   nixpkgs.overlays = [
-    (import (fetchTarball "https://github.com/user/nix-flake-helium-browser/archive/main.tar.gz")).overlays.default
+    (import (fetchTarball "https://github.com/oxcl/nix-flake-helium-browser/archive/main.tar.gz")).overlays.default
   ];
 
   environment.systemPackages = [ pkgs.helium ];
@@ -158,7 +158,7 @@ The NixOS module provides declarative configuration under `programs.helium` with
 
 {
   imports = [
-    (import (fetchTarball "https://github.com/user/nix-flake-helium-browser/archive/main.tar.gz")).nixosModules.default
+    (import (fetchTarball "https://github.com/oxcl/nix-flake-helium-browser/archive/main.tar.gz")).nixosModules.default
     # Or if using flakes: inputs.helium-flake.nixosModules.default
   ];
 
@@ -223,7 +223,7 @@ For user-level configuration:
 
 {
   imports = [
-    (import (fetchTarball "https://github.com/user/nix-flake-helium-browser/archive/main.tar.gz")).homeModules.default
+    (import (fetchTarball "https://github.com/oxcl/nix-flake-helium-browser/archive/main.tar.gz")).homeModules.default
     # Or if using flakes: inputs.helium-flake.homeModules.default
   ];
 
@@ -278,20 +278,6 @@ Create `~/.config/helium-flags.conf`:
 ```
 
 **Format:** One flag per line, `#` for comments. The file is read by Helium's wrapper script.
-
----
-
-## 🔄 Updating Helium
-
-To update to a new Helium version:
-
-1. Check the latest version at [helium-linux releases](https://github.com/imputnet/helium-linux/releases)
-2. Update `helium.nix`:
-   - Change `version` (line 68)
-   - Update `suffix` if needed (lines 70-73)
-   - Update `sha256` hash (or remove it and let Nix tell you the correct hash)
-3. Run `nix build` to test
-4. Commit the changes
 
 ---
 
