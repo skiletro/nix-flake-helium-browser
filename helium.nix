@@ -130,12 +130,6 @@ let
     libkrb5
     snappy
     udev
-    gstreamer
-    gst-plugins-base
-    gst-plugins-good
-    gst-plugins-bad
-    gst-plugins-ugly
-    gst-libav
   ];
 
   libPath = makeLibraryPath deps
