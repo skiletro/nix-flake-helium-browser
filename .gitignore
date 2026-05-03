@@ -1,0 +1,18 @@
+# Nix build outputs
+result
+result-*
+
+# Direnv
+.envrc
+.direnv/
+
+# Editor files
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
+
+# Temporary files
+*.tmp
+*.bak
