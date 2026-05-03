@@ -10,7 +10,7 @@ in
     package = lib.mkOption {
       type = lib.types.package;
       description = "The Helium package to use.";
-      default = pkgs.callPackage ../..helium.nix { };
+      default = pkgs.callPackage ../../helium.nix { };
       defaultText = "The helium package from this flake";
     };
 
