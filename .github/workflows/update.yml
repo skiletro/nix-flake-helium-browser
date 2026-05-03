@@ -62,21 +62,11 @@ jobs:
         run: |
           nix build .#helium
 
-      - name: Create pull request
+      - name: Commit and push changes
         if: steps.check_update.outputs.update_needed == 'true'
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-
-          BRANCH="update/helium-${{ steps.check_update.outputs.latest }}"
-          git checkout -b "$BRANCH"
           git add helium.nix
-          git commit -m "chore: update Helium to ${{ steps.check_update.outputs.latest }}"
-          git push origin "$BRANCH"
-
-          gh pr create \
-            --title "chore: update Helium to ${{ steps.check_update.outputs.latest }}" \
-            --body "Automated update of Helium Browser from ${{ steps.check_update.outputs.current }} to ${{ steps.check_update.outputs.latest }}." \
-            --base main
+          git commit -m "chore: update Helium to ${{ steps.check_update.outputs.latest }}" || echo "No changes to commit"
+          git push https://${{ secrets.PULL_REQUET_KEY }}@github.com/${{ github.repository }}.git main
