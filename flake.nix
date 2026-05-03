@@ -25,5 +25,11 @@
           program = "${self.packages.${system}.helium}/bin/helium";
         };
       });
+
+      overlays.default = import ./overlay.nix;
+
+      nixosModules.default = import ./modules/nixos;
+
+      homeModules.default = import ./modules/home-manager;
     };
 }
