@@ -5,6 +5,7 @@
 , patchelf
 , makeWrapper
 , wrapGAppsHook3
+, makeFontsConf
 , qt6
 , glib
 , gsettings-desktop-schemas
@@ -61,6 +62,8 @@
 , udev
 , libXt
 , binutils
+, noto-fonts-cjk-sans
+, noto-fonts-cjk-serif
 }:
 
 let
@@ -138,6 +141,13 @@ let
     + ":$out/opt/helium";
 
   binpath = makeBinPath deps;
+
+  fontsConf = makeFontsConf {
+    fontDirectories = [
+      noto-fonts-cjk-sans
+      noto-fonts-cjk-serif
+    ];
+  };
 in
 
 stdenv.mkDerivation {
@@ -236,6 +246,7 @@ stdenv.mkDerivation {
       --prefix PATH : ${lib.makeBinPath [ xdg-utils coreutils ]}
       --add-flags "\''${NIXOS_OZONE_WL:+\''${WAYLAND_DISPLAY:+--ozone-platform-hint=auto}}"
       --set-default CHROME_VERSION_EXTRA nix
+      --set FONTCONFIG_FILE "${fontsConf}"
     )
   '';
 
