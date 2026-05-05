@@ -64,6 +64,7 @@
 , binutils
 , noto-fonts-cjk-sans
 , noto-fonts-cjk-serif
+, flags ? [ ]
 }:
 
 let
@@ -247,6 +248,7 @@ stdenv.mkDerivation {
       --add-flags "\''${NIXOS_OZONE_WL:+\''${WAYLAND_DISPLAY:+--ozone-platform-hint=auto}}"
       --set-default CHROME_VERSION_EXTRA nix
       --set FONTCONFIG_FILE "${fontsConf}"
+      ${lib.concatMapStringsSep "\n      " (f: "--add-flags \"${f}\"") flags}
     )
   '';
 

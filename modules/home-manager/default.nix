@@ -4,6 +4,8 @@ let
   cfg = config.programs.helium;
 
   configDir = "${config.xdg.configHome}/helium";
+
+  packageWithFlags = cfg.package.override { inherit (cfg) flags; };
 in
 {
   options.programs.helium = {
@@ -14,6 +16,18 @@ in
       description = "The Helium package to use.";
       default = pkgs.callPackage ../../helium.nix { };
       defaultText = "The helium package from this flake";
+    };
+
+    flags = lib.mkOption {
+      type = lib.types.listOf lib.types.str;
+      default = [ ];
+      example = [ "--enable-features=TouchpadOverscrollHistoryNavigation" "--start-maximized" ];
+      description = ''
+        Additional command-line flags passed to Helium.
+
+        These are added directly to the wrapped binary, so they will always be applied.
+        For user-specific flags that you don't want managed by Nix, consider using {file}`~/.config/helium-browser-flags.conf` instead.
+      '';
     };
 
     policies = lib.mkOption {
@@ -37,7 +51,7 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-    home.packages = [ cfg.package ];
+    home.packages = [ packageWithFlags ];
 
     home.file = lib.optionalAttrs (cfg.policies != { }) {
       "${configDir}/policies/managed/nixos.json" = {

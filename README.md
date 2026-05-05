@@ -35,6 +35,7 @@ This approach is similar to how [Vivaldi](https://github.com/NixOS/nixpkgs/blob/
 - ✅ **NixOS Module** - Declarative system-wide configuration with `programs.helium`
 - ✅ **Home Manager Module** - User-level configuration
 - ✅ **Overlay** - Expose `pkgs.helium` in your Nixpkgs instance
+- ✅ **Flags Support** - Declarative command-line flags via `programs.helium.flags`
 - ✅ **Policies Support** - Full Chrome Enterprise policy support via `/etc/chromium/policies/managed/`
 - ✅ **Multi-Arch** - Supports both `x86_64-linux` and `aarch64-linux`
 - ✅ **Wayland Ready** - Includes `--ozone-platform-hint=auto` for native Wayland support
@@ -168,6 +169,12 @@ The NixOS module provides declarative configuration under `programs.helium` with
     # Optional: override the package
     # package = pkgs.helium;
 
+    # 🚩 Flags - Command-line arguments always passed to Helium
+    flags = [
+      "--disable-gpu"
+      "--ozone-platform-hint=auto"
+    ];
+
     # 🎯 Policies - Written to /etc/chromium/policies/managed/helium-nixos.json
     # Also written to /etc/helium/policies/managed/ for future compatibility
     policies = {
@@ -187,6 +194,7 @@ The NixOS module provides declarative configuration under `programs.helium` with
 |--------|------|---------|-------------|
 | `programs.helium.enable` | `bool` | `false` | Install Helium system-wide |
 | `programs.helium.package` | `package` | `pkgs.helium` | The Helium package to use |
+| `programs.helium.flags` | `list of str` | `[]` | Command-line flags added to the wrapper |
 | `programs.helium.policies` | `attrs` | `{}` | Policies written to `/etc/chromium/policies/managed/` |
 
 ### 📋 Policy Documentation
@@ -233,6 +241,12 @@ For user-level configuration:
     # Optional: override the package
     # package = pkgs.helium;
 
+    # 🚩 Flags - Command-line arguments always passed to Helium
+    flags = [
+      "--enable-features=TouchpadOverscrollHistoryNavigation"
+      "--start-maximized"
+    ];
+
     # Optional: user policies (best-effort, use NixOS module for critical policies)
     policies = {
       "BrowserSignin" = 0;
@@ -247,6 +261,7 @@ For user-level configuration:
 |--------|------|---------|-------------|
 | `programs.helium.enable` | `bool` | `false` | Enable Helium for user |
 | `programs.helium.package` | `package` | `pkgs.helium` | The Helium package to use |
+| `programs.helium.flags` | `list of str` | `[]` | Command-line flags added to the wrapper |
 | `programs.helium.policies` | `attrs` | `{}` | User policies written to `~/.config/helium/policies/managed/nixos.json` |
 
 > **⚠️ Note:** User-level policies may not be reliably read by Chromium-based browsers. For critical policies, use the **NixOS module** instead.
@@ -255,9 +270,26 @@ For user-level configuration:
 
 ## 🚩 Persistent Flags
 
-Helium supports persistent flags via configuration files (a feature added by Linux distro packagers):
+### Declarative flags via Nix (Recommended)
 
-### System-wide flags
+Flags can be set declaratively in your NixOS or Home Manager configuration. These are baked into the wrapped binary:
+
+```nix
+programs.helium = {
+  enable = true;
+  flags = [
+    "--disable-gpu"
+    "--ozone-platform-hint=auto"
+    "--start-maximized"
+  ];
+};
+```
+
+### Configuration file flags
+
+Helium also supports persistent flags via configuration files (a feature added by Linux distro packagers). These are read by the upstream wrapper script and are useful for per-user flags you don't want managed by Nix:
+
+#### System-wide flags
 Create `/etc/helium-flags.conf`:
 ```
 # Disable hardware acceleration
@@ -267,7 +299,7 @@ Create `/etc/helium-flags.conf`:
 --ozone-platform-hint=auto
 ```
 
-### User flags
+#### User flags
 Create `~/.config/helium-flags.conf`:
 ```
 # Enable touchpad swipe navigation

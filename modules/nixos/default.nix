@@ -2,6 +2,8 @@
 
 let
   cfg = config.programs.helium;
+
+  packageWithFlags = cfg.package.override { inherit (cfg) flags; };
 in
 {
   options.programs.helium = {
@@ -12,6 +14,18 @@ in
       description = "The Helium package to use.";
       default = pkgs.callPackage ../../helium.nix { };
       defaultText = "The helium package from this flake";
+    };
+
+    flags = lib.mkOption {
+      type = lib.types.listOf lib.types.str;
+      default = [ ];
+      example = [ "--disable-gpu" "--ozone-platform-hint=auto" ];
+      description = ''
+        Additional command-line flags passed to Helium.
+
+        These are added directly to the wrapped binary, so they will always be applied.
+        For user-specific flags, consider using {file}`~/.config/helium-browser-flags.conf` instead.
+      '';
     };
 
     policies = lib.mkOption {
@@ -33,7 +47,7 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-    environment.systemPackages = [ cfg.package ];
+    environment.systemPackages = [ packageWithFlags ];
 
     environment.etc = lib.optionalAttrs (cfg.policies != { }) {
       "chromium/policies/managed/helium-nixos.json" = {
