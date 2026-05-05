@@ -12,6 +12,11 @@
         <a href="https://github.com/imputnet/helium-linux/releases">⬇️ Releases</a> ·
         <a href="https://github.com/oxcl/nix-flake-helium-browser">📦 This Flake</a>
     </p>
+    <p>
+        🌐 <strong>English</strong> ·
+        <a href="README.ru.md">Русский</a> ·
+        <a href="README.zh.md">中文</a>
+    </p>
 </center>
 
 ---
@@ -49,7 +54,9 @@ This approach is similar to how [Vivaldi](https://github.com/NixOS/nixpkgs/blob/
 ├── helium.nix                  # Package derivation (repackages .deb)
 ├── overlay.nix                 # Nixpkgs overlay
 ├── LICENSE                     # GPL-3.0 License
-├── README.md                   # This file
+├── README.md                   # This file (English)
+├── README.ru.md                # Russian translation
+├── README.zh.md                # Chinese translation
 ├── helium-logo.png            # Helium logo
 └── modules/
     ├── nixos/
