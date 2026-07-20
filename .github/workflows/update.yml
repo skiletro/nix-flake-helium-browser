@@ -17,7 +17,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          token: ${{ secrets.PULL_REQUET_KEY }}
+          token: ${{ secrets.PULL_REQUEST_KEY }}
           ref: main
           fetch-depth: 0
 
@@ -71,7 +71,7 @@ jobs:
       - name: Commit and push changes
         if: steps.check_update.outputs.update_needed == 'true'
         env:
-          TOKEN: ${{ secrets.PULL_REQUET_KEY }}
+          TOKEN: ${{ secrets.PULL_REQUEST_KEY }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
