@@ -47,19 +47,21 @@ jobs:
         run: |
           sed -i "s/version = \"[^\"]*\"/version = \"${{ steps.check_update.outputs.latest }}\"/" helium.nix
 
-      - name: Calculate new hash
+      - name: Calculate new hashes
         if: steps.check_update.outputs.update_needed == 'true'
         id: hash
         run: |
           VERSION="${{ steps.check_update.outputs.latest }}"
-          URL="https://github.com/imputnet/helium-linux/releases/download/${VERSION}/helium-bin_${VERSION}-1_amd64.deb"
-          HASH=$(nix store prefetch-file --json "$URL" | jq -r .hash)
-          echo "hash=$HASH" >> "$GITHUB_OUTPUT"
+          AMD64_HASH=$(nix store prefetch-file --json "https://github.com/imputnet/helium-linux/releases/download/${VERSION}/helium-bin_${VERSION}-1_amd64.deb" | jq -r .hash)
+          ARM64_HASH=$(nix store prefetch-file --json "https://github.com/imputnet/helium-linux/releases/download/${VERSION}/helium-bin_${VERSION}-1_arm64.deb" | jq -r .hash)
+          echo "amd64=$AMD64_HASH" >> "$GITHUB_OUTPUT"
+          echo "arm64=$ARM64_HASH" >> "$GITHUB_OUTPUT"
 
-      - name: Update hash in helium.nix
+      - name: Update hashes in helium.nix
         if: steps.check_update.outputs.update_needed == 'true'
         run: |
-          sed -i "s|sha256 = \"[^\"]*\"|sha256 = \"${{ steps.hash.outputs.hash }}\"|" helium.nix
+          sed -i 's|x86_64-linux = "sha256-[^"]*"|x86_64-linux = "${{ steps.hash.outputs.amd64 }}"|' helium.nix
+          sed -i 's|aarch64-linux = "sha256-[^"]*"|aarch64-linux = "${{ steps.hash.outputs.arm64 }}"|' helium.nix
 
       - name: Test build
         if: steps.check_update.outputs.update_needed == 'true'
