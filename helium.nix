@@ -64,6 +64,7 @@
 , binutils
 , noto-fonts-cjk-sans
 , noto-fonts-cjk-serif
+, widevine-cdm
 , flags ? [ ]
 }:
 
@@ -224,6 +225,10 @@ stdenv.mkDerivation {
 
     # Create symlink for wrapGAppsHook to wrap (like Brave does)
     ln -sf $out/opt/helium/helium-wrapper $out/bin/helium
+
+    # Add WideVine DRM Support
+    mkdir -p $out/opt/helium/WidevineCdm
+    cp -a ${widevine-cdm}/share/google/chrome/WidevineCdm/* $out/opt/helium/WidevineCdm/
 
     # Fix .desktop file
     substituteInPlace $out/share/applications/helium.desktop \
