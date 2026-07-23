@@ -30,7 +30,8 @@ jobs:
         id: check_update
         run: |
           CURRENT=$(grep -oP 'version = "\K[^"]+' helium.nix)
-          LATEST=$(curl -s https://api.github.com/repos/imputnet/helium-linux/releases/latest | jq -r .tag_name)
+
+          LATEST=$(curl -s --fail https://api.github.com/repos/imputnet/helium-linux/releases/latest | jq -r '.tag_name // empty') || LATEST=""
           LATEST=$(echo "$LATEST" | sed 's/^v//')
 
           echo "current=$CURRENT" >> "$GITHUB_OUTPUT"
