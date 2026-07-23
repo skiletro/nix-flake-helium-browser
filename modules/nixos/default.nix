@@ -3,7 +3,9 @@
 let
   cfg = config.programs.helium;
 
-  packageWithFlags = cfg.package.override { inherit (cfg) flags; };
+  heliumPkg = if cfg.withWidevine then pkgs.helium-wv else cfg.package;
+
+  packageWithFlags = heliumPkg.override { inherit (cfg) flags; };
 in
 {
   options.programs.helium = {
@@ -12,9 +14,11 @@ in
     package = lib.mkOption {
       type = lib.types.package;
       description = "The Helium package to use.";
-      default = pkgs.callPackage ../../helium.nix { };
+      default = pkgs.callPackage ../../helium.nix { widevine-cdm = null; };
       defaultText = "The helium package from this flake";
     };
+
+    withWidevine = lib.mkEnableOption "Widevine DRM support (uses helium-wv package)";
 
     flags = lib.mkOption {
       type = lib.types.listOf lib.types.str;

@@ -1,7 +1,7 @@
 {
   description = "Helium Browser - Private, fast, and honest web browser";
 
-  inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+  inputs.nixpkgs.url = "github:numtide/nixpkgs-unfree?ref=nixos-unstable";
 
   outputs = { self, nixpkgs }:
     let
@@ -14,7 +14,8 @@
           pkgs = nixpkgs.legacyPackages.${system};
         in
         {
-          helium = pkgs.callPackage ./helium.nix {};
+          helium = pkgs.callPackage ./helium.nix { widevine-cdm = null; };
+          helium-wv = pkgs.callPackage ./helium.nix { widevine-cdm = pkgs.widevine-cdm; };
           default = self.packages.${system}.helium;
         }
       );
